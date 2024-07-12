@@ -15,11 +15,11 @@ const login = async (req, res) => {
     return res.status(401).json({reason: 'Invalid token'});
   }
 
-  const uid = decodedToken.uid;
+  const id = decodedToken.id;
 
 
   try {
-    const user = await User.create({uid: uid, name: name});
+    const user = await User.create({id: id, name: name});
   } catch (e) {
     if (e instanceof Sequelize.UniqueConstraintError) {
       return res.status(200).send('Logged in');
