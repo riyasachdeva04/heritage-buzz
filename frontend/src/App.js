@@ -13,6 +13,7 @@ import GeneratePage from "./components/generate_page";
 import './App.css';
 import { app } from "./firebase";
 import Home from "./components/home";
+import Catalog from "./components/catalog";
 
 const auth = getAuth(app);
 
@@ -60,6 +61,7 @@ function App() {
     <Route path="/catalogue" element={
       <>
       <Navbar/>
+      <Catalog/>
       </>
     } />
     </Routes>
