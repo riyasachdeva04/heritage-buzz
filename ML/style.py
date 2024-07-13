@@ -4,6 +4,10 @@ from tensorflow import keras
 from tensorflow.keras.applications import vgg19
 # from IPython.display import Image
 from PIL import Image
+from rembg import remove
+import onnxruntime as ort
+import cv2
+import matplotlib.pyplot as plt
 
 #open, resize and format picture into tensors
 def preprocess_image(image_path, img_nrows, img_ncols):
@@ -104,17 +108,42 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
     style_reference_image = preprocess_image(style_reference_image_path, img_nrows, img_ncols)
     combination_image = tf.Variable(preprocess_image(base_image_path, img_nrows, img_ncols))
     
-    for i in range(400):
+    i = 0
+    for i in range(2):
         loss, grads = compute_loss_and_grads(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols)
         optimizer.apply_gradients([(grads, combination_image)])
         print('Iteration %d: loss=%.2f' % (i, loss))
-        if i % 400 == 0:
+        if i % 1 == 0:
             print('Iteration %d: loss=%.2f' % (i, loss))
             img = deprocess_image(combination_image.numpy(), img_nrows, img_ncols)
             fname = result_prefix + '_at_iteration_%d.png' % i
             keras.preprocessing.image.save_img(fname, img)
+    
+        image_path = 'tshirt_generated_at_iteration_' + str(i) + '.png' 
+        image = cv2.imread(image_path)
+
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        heatmap = cv2.applyColorMap(gray_image, cv2.COLORMAP_JET)
+        output_path = 'heatmap.png'
+
+        cv2.imwrite(output_path, heatmap)
+
+        input_path = 'heatmap.png'
+        output_path = 'output.png'
+
+        sess_opts = ort.SessionOptions()
+        providers = ["CPUExecutionProvider"]
+
+        with open(input_path, 'rb') as i:
+          with open(output_path, 'wb') as o:
+              input = i.read()
+              output = remove(input,session_options=sess_opts, providers=providers)
+              o.write(output)
 
 if __name__ == "__main__":
+    
     base_image_path = './input_image.png'
     style_reference_image_path = './design.png'
     neural_style_transfer(base_image_path, style_reference_image_path)
+    
