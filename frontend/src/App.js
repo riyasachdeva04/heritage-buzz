@@ -12,6 +12,7 @@ import Footer from "./components/footer";
 import GeneratePage from "./components/generate_page";
 import './App.css';
 import { app } from "./firebase";
+import Home from "./components/home";
 
 const auth = getAuth(app);
 
@@ -32,8 +33,8 @@ function App() {
   if (user === null){
     return (
       <div classname="App">
-        <SigninPage/>
         <SignupPage/>
+        {/* <SigninPage/> */}
       </div>
     )
   }
@@ -47,6 +48,7 @@ function App() {
       <>
       <h1>Hi {user.email}</h1>
       <Navbar/>
+      <Home/>
       </>
     } />
     <Route path="/generate" element={
