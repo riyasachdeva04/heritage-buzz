@@ -14,7 +14,7 @@ const Home = () => {
                 <div className="hero-content">
                     <h1>Welcome to Heritage Buzz</h1>
                     <p>Explore and share your own heritage stories with a vibrant community. Discover unique designs that merge tradition with contemporary fashion.</p>
-                    <a href="/catalog" className="btn-primary">Explore Designs</a>
+                    <a href="/catalogue" className="btn-primary">Explore Designs</a>
                 </div>
                 <div className="hero-image">
                     <img src={graffiti} alt="graffiti" />
@@ -51,23 +51,30 @@ const Home = () => {
                     </div>
                 </div>
             </div> */}
-            <div className="testimonials-section">
-                <h2>User Testimonials</h2>
-                <div className="testimonials">
-                    <div className="testimonial">
-                        <p>"Heritage Buzz's designs are stunning! I love how they blend traditional art with modern fashion."</p>
-                        <footer>- Satisfied Customer</footer>
+            <div className="testimonials-section container">
+            <h2 className="text-center my-4">User Testimonials</h2>
+                <div className="row">
+                    <div className="col-md-4 col-sm-12 mb-4">
+                        <div className="testimonial p-3 border rounded">
+                            <p>"Heritage Buzz's designs are stunning! I love how they blend traditional art with modern fashion."</p>
+                            <footer>- Satisfied Customer</footer>
+                        </div>
                     </div>
-                    <div className="testimonial">
-                        <p>"A fantastic platform for discovering and customizing unique outfits. Highly recommended!"</p>
-                        <footer>- Happy User</footer>
+                    <div className="col-md-4 col-sm-12 mb-4">
+                        <div className="testimonial p-3 border rounded">
+                            <p>"A fantastic platform for discovering and customizing unique outfits. Highly recommended!"</p>
+                            <footer>- Happy User</footer>
+                        </div>
                     </div>
-                    <div className="testimonial">
-                        <p>"The customization options are amazing. I created a design that perfectly matches my style."</p>
-                        <footer>- Fashion Enthusiast</footer>
+                    <div className="col-md-4 col-sm-12 mb-4">
+                        <div className="testimonial p-3 border rounded">
+                            <p>"The customization options are amazing. I created a design that perfectly matches my style."</p>
+                            <footer>- Fashion Enthusiast</footer>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     );
 };

@@ -43,11 +43,10 @@ function App() {
   return (
     <>
     <Router>
-    <div className="container">
+    <div className="container" style={{ margin: 0, minWidth: '100%' }}>
     <Routes>
     <Route path="/" element={
       <>
-      <h1>Hi {user.email}</h1>
       <Navbar/>
       <Home/>
       </>

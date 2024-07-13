@@ -8,7 +8,7 @@ const GeneratePage = () => {
     // Your code for fetching and storing catalog data goes here
 
     return (
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', backgroundColor: 'rgb(165 151 151 / 51%)'}}>
             <h1>Choose an artform</h1>
             <div className="dropdown" style={{ display: 'inline-block' }}>
                 <button
@@ -68,7 +68,7 @@ const GeneratePage = () => {
             <img src={artImg} alt="Art" style={{ maxWidth: '100%', height: 'auto' }} />
             <br/>
             <h2>OR</h2>
-            <button style={{ backgroundColor: 'green', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Upload custom design</button>
+            <button style={{ backgroundColor: 'green', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Upload custom art</button>
             <br />
             <br />
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -82,6 +82,9 @@ const GeneratePage = () => {
                     <img src={img3} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
             </div>
+            <br />
+            <button style={{ backgroundColor: '#c35264', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Generate design</button>
+            <br />
             <br />
         </div>
     );
