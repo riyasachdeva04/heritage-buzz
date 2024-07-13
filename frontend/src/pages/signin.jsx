@@ -1,8 +1,9 @@
 import React, {useState} from "react";
-import {getAuth, signInWithEmailAndPassword} from "firebase/auth";
+import {getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup} from "firebase/auth";
 import {app} from '../firebase';
 
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 const SigninPage = () => {
     const[email, setEmail] = useState('');
@@ -12,6 +13,10 @@ const SigninPage = () => {
         signInWithEmailAndPassword(auth, email, password)
         .then((value) => {console.log("Success!")})
         .catch((err) => console.log(err));
+    };
+
+    const signinWithGoogle = (email, password) => {
+        signInWithPopup(auth, googleProvider);
     };
 
     return (
@@ -27,6 +32,8 @@ const SigninPage = () => {
             value={password}
             type="password" placeholder="Enter password"/>
             <button onClick={signinUser}>Sign in</button>
+
+            <button onClick={signinWithGoogle}>Sign in with google</button>
         </div>
     );
 };
