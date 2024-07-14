@@ -11,6 +11,7 @@ const GeneratePage = () => {
     const storage = getStorage(app);
     const db = getFirestore(app);
     const [file, setFile] = useState(null);
+    const [processedImageUrl, setProcessedImageUrl] = useState(null);
 
     // Function to handle file input change
     const handleFileChange = (event) => {
@@ -39,7 +40,28 @@ const GeneratePage = () => {
             const downloadURL = await uploadImage(file);
             await saveImageUrlToFirestore(downloadURL);
             console.log('Image uploaded and URL saved to Firestore:', downloadURL);
-            alert('Image uploaded successfully!');
+
+            const formData = new FormData();
+            formData.append('design', file);
+            try {
+                const response = await fetch('http://localhost:5000/style_transfer', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const processedImageURL = URL.createObjectURL(blob);
+                    setProcessedImageUrl(processedImageURL);
+                    alert('Image processed successfully!');
+                } else {
+                    console.log(response);
+                    throw new Error('Image processing failed.');
+                }
+            } catch (error) {
+                console.error('Error processing image:', error);
+                alert('Image processing failed.');
+            }
         } else {
             alert('Please select a file first.');
         }
@@ -89,6 +111,12 @@ const GeneratePage = () => {
             <br />
             <button onClick={handleUpload} style={{ backgroundColor: '#c35264', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Generate design</button>
             <br /><br />
+            {processedImageUrl && (
+                <div>
+                    <h2>Processed Image:</h2>
+                    <img src={processedImageUrl} alt="Processed Art" style={{ maxWidth: '100%', height: 'auto' }} />
+                </div>
+            )}
         </div>
     );
 };

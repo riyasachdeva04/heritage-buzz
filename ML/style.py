@@ -7,8 +7,10 @@ from PIL import Image
 from rembg import remove
 import onnxruntime as ort
 import cv2
-from flask import Flask, send_file
+from flask import Flask, send_file, request
 import matplotlib.pyplot as plt
+from flask_cors import CORS
+from PIL import Image
 
 #open, resize and format picture into tensors
 def preprocess_image(image_path, img_nrows, img_ncols):
@@ -110,7 +112,7 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
     combination_image = tf.Variable(preprocess_image(base_image_path, img_nrows, img_ncols))
     
     i = 0
-    for i in range(2):
+    for i in range(5):
         loss, grads = compute_loss_and_grads(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols)
         optimizer.apply_gradients([(grads, combination_image)])
         print('Iteration %d: loss=%.2f' % (i, loss))
@@ -119,40 +121,52 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
             img = deprocess_image(combination_image.numpy(), img_nrows, img_ncols)
             fname = result_prefix + '_at_iteration_%d.png' % i
             keras.preprocessing.image.save_img(fname, img)
-    
-        image_path = 'tshirt_generated_at_iteration_' + str(i) + '.png' 
-        image = cv2.imread(image_path)
+    print('b')
+    image_path = 'tshirt_generated_at_iteration_' + str(i) + '.png' 
+    image = cv2.imread(image_path)
 
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        heatmap = cv2.applyColorMap(gray_image, cv2.COLORMAP_JET)
-        output_path = 'heatmap.png'
+    heatmap = cv2.applyColorMap(gray_image, cv2.COLORMAP_JET)
+    output_path = 'heatmap.png'
+    print('a')
+    cv2.imwrite(output_path, heatmap)
 
-        cv2.imwrite(output_path, heatmap)
+    input_path = 'heatmap.png'
+    output_path = 'output.png'
 
-        input_path = 'heatmap.png'
-        output_path = 'output.png'
+    sess_opts = ort.SessionOptions()
+    providers = ["CPUExecutionProvider"]
 
-        sess_opts = ort.SessionOptions()
-        providers = ["CPUExecutionProvider"]
+    with open(input_path, 'rb') as i:
+      with open(output_path, 'wb') as o:
+          input = i.read()
+          output = remove(input,session_options=sess_opts, providers=providers)
+          o.write(output)
+          
+    # image = Image.open(output_path)
 
-        with open(input_path, 'rb') as i:
-          with open(output_path, 'wb') as o:
-              input = i.read()
-              output = remove(input,session_options=sess_opts, providers=providers)
-              o.write(output)
-        return output_path
+    # background = Image.new('RGBA', image.size, (255, 255, 255, 255))
+
+    # background.paste(image, (0, 0), image)
+
+    # background.save(output_path, 'PNG')
+
+    return output_path
 
 base_image_path = './input_image.png'
-style_reference_image_path = './design.png'
-app = Flask(__name__)
 
-@app.route('/style_transfer', methods=['GET'])
-def get_image():
-    base_image_path = './input_image.png'
-    style_reference_image_path = './design.png'
-    output_img = neural_style_transfer(base_image_path, style_reference_image_path)
-    return send_file(output_img, mimetype='image/png')
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/style_transfer', methods=['POST'])
+def style_transfer():
+  design = request.files['design']
+  design_path = './design.png'
+  design.save(design_path)
+  base_image_path = './input_image.png'
+  output_img = neural_style_transfer(base_image_path, design_path)
+  return send_file(output_img, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run()

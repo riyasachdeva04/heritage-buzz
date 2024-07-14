@@ -1,3 +1,5 @@
 rembg
 numpy
 tensorflow
+flask
+flask-cors

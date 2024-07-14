@@ -14,6 +14,7 @@ import './App.css';
 import { app } from "./firebase";
 import Home from "./components/home";
 import Catalog from "./components/catalog";
+import Avatar from "./components/avatar";
 
 const auth = getAuth(app);
 
@@ -42,24 +43,22 @@ function App() {
 
   return (
     <>
+    <Navbar/>
     <Router>
     <div className="container" style={{ margin: 0, minWidth: '100%' }}>
     <Routes>
     <Route path="/" element={
       <>
-      <Navbar/>
       <Home/>
       </>
     } />
     <Route path="/generate" element={
       <>
-      <Navbar/>
       <GeneratePage/>
       </>
     } />
     <Route path="/catalogue" element={
       <>
-      <Navbar/>
       <Catalog/>
       </>
     } />
