@@ -7,6 +7,7 @@ from PIL import Image
 from rembg import remove
 import onnxruntime as ort
 import cv2
+from flask import Flask, send_file
 import matplotlib.pyplot as plt
 
 #open, resize and format picture into tensors
@@ -140,10 +141,19 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
               input = i.read()
               output = remove(input,session_options=sess_opts, providers=providers)
               o.write(output)
+        return output_path
 
-if __name__ == "__main__":
-    
+base_image_path = './input_image.png'
+style_reference_image_path = './design.png'
+app = Flask(__name__)
+
+@app.route('/style_transfer', methods=['GET'])
+def get_image():
     base_image_path = './input_image.png'
     style_reference_image_path = './design.png'
-    neural_style_transfer(base_image_path, style_reference_image_path)
+    output_img = neural_style_transfer(base_image_path, style_reference_image_path)
+    return send_file(output_img, mimetype='image/png')
+
+if __name__ == '__main__':
+    app.run()
     
