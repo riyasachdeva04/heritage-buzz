@@ -40,76 +40,57 @@ const GeneratePage = () => {
             const downloadURL = await uploadImage(file);
             await saveImageUrlToFirestore(downloadURL);
             console.log('Image uploaded and URL saved to Firestore:', downloadURL);
-
-            const formData = new FormData();
-            formData.append('design', file);
-            try {
-                const response = await fetch('http://localhost:5000/style_transfer', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const processedImageURL = URL.createObjectURL(blob);
-                    setProcessedImageUrl(processedImageURL);
-                    alert('Image processed successfully!');
-                } else {
-                    console.log(response);
-                    throw new Error('Image processing failed.');
-                }
-            } catch (error) {
-                console.error('Error processing image:', error);
-                alert('Image processing failed.');
-            }
         } else {
             alert('Please select a file first.');
         }
+    };
+    
+    // Function to handle artform change
+    const handleArtformChange = (event) => {
+        // Handle artform change logic here
     };
 
     return (
         <div style={{ textAlign: 'center', backgroundColor: 'rgb(165 151 151 / 51%)' }}>
             <h1>Choose an artform</h1>
-            <div className="dropdown" style={{ display: 'inline-block' }}>
-                <button
-                    className="btn btn-secondary dropdown-toggle"
-                    type="button"
-                    id="dropdownMenuButton"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                >
-                    Dropdown link
-                </button>
-                <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a className="dropdown-item" href="/">Madhubani</a></li>
-                    <li><a className="dropdown-item" href="/">Gond</a></li>
-                    <li><a className="dropdown-item" href="/">Kalighat</a></li>
-                    <li><a className="dropdown-item" href="/">Kangra</a></li>
-                    <li><a className="dropdown-item" href="/">Mural</a></li>
-                    <li><a className="dropdown-item" href="/">Mandana</a></li>
-                    <li><a className="dropdown-item" href="/">Warli</a></li>
-                    <li><a className="dropdown-item" href="/">Pichwai</a></li>
-                </ul>
-            </div>
-            <br /><br />
-            <img src={artImg} alt="Art" style={{ maxWidth: '100%', height: 'auto' }} />
-            <br />
-            <h2>OR</h2>
-            <input type="file" onChange={handleFileChange} style={{ backgroundColor: 'green', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }} />
-            <br /><br />
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
-                    <img src={img1} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <form>
+                <div className="dropdown" style={{ display: 'inline-block' }}>
+                    <select
+                        className="form-select"
+                        aria-label="Select artform"
+                        onChange={handleArtformChange}
+                    >
+                        <option value="">Select artform</option>
+                        <option value="Madhubani">Madhubani</option>
+                        <option value="Gond">Gond</option>
+                        <option value="Kalighat">Kalighat</option>
+                        <option value="Kangra">Kangra</option>
+                        <option value="Mural">Mural</option>
+                        <option value="Mandana">Mandana</option>
+                        <option value="Warli">Warli</option>
+                        <option value="Pichwai">Pichwai</option>
+                    </select>
                 </div>
-                <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
-                    <img src={img2} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <br /><br />
+                <img src={artImg} alt="Art" style={{ maxWidth: '100%', height: 'auto' }} />
+                <br />
+                <h2>OR</h2>
+                <input type="file" onChange={handleFileChange} style={{ backgroundColor: 'green', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }} />
+                <br /><br />
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
+                        <img src={img1} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
+                        <img src={img2} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
+                        <img src={img3} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
                 </div>
-                <div style={{ width: '10rem', height: 'auto', borderRadius: '50%', overflow: 'hidden', margin: '0 1rem', border: '2px solid black' }}>
-                    <img src={img3} alt="Art" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-            </div>
-            <br />
-            <button onClick={handleUpload} style={{ backgroundColor: '#c35264', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Generate design</button>
+                <br />
+                <button type="submit" onClick={handleUpload} style={{ backgroundColor: '#c35264', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Generate design</button>
+            </form>
             <br /><br />
             {processedImageUrl && (
                 <div>
