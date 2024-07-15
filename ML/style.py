@@ -138,7 +138,7 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
 
     # Apply the heatmap with the chosen colormap and fixed intensity scale
     scaled_gray_image = cv2.convertScaleAbs(gray_image)
-    heatmap = cv2.applyColorMap(scaled_gray_image, colormap)
+    heatmap = cv2.applyColorMap(scaled_gray_image, cv2.COLORMAP_OCEAN)
 
     output_path = 'heatmap.png'
     print('a')

@@ -123,7 +123,7 @@ const GeneratePage = () => {
             <br /><br />
             {processedImageUrl && (
                 <div>
-                    <h2>Processed Image:</h2>
+                    <h2>Generated design:</h2>
                     <img src={processedImageUrl} alt="Processed Art" style={{ maxWidth: '100%', height: 'auto' }} />
                 </div>
             )}
