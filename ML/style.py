@@ -11,6 +11,8 @@ from flask import Flask, send_file, request
 import matplotlib.pyplot as plt
 from flask_cors import CORS
 from PIL import Image
+import os
+import random
 
 #open, resize and format picture into tensors
 def preprocess_image(image_path, img_nrows, img_ncols):
@@ -167,6 +169,26 @@ def style_transfer():
   base_image_path = './input_image.png'
   output_img = neural_style_transfer(base_image_path, design_path)
   return send_file(output_img, mimetype='image/png')
+
+@app.route('/generate_style', methods=['POST'])
+def generate_style():
+    data = request.get_json()
+    artform = data.get('artform')
+    design_folder = './designs/'
+    artform_folder = os.path.join(design_folder, artform)
+    design_files = os.listdir(artform_folder)
+    random_design = random.choice(design_files)
+    design_path = os.path.join(artform_folder, random_design)
+
+    print('Artform:', artform)
+    print('Random Design:', random_design)
+    print('Design Path:', design_path)
+
+    base_image_path = './input_image.png'
+    output_img = neural_style_transfer(base_image_path, design_path)
+    
+    return send_file(output_img, mimetype='image/png')
+
 
 if __name__ == '__main__':
     app.run()

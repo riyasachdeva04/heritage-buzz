@@ -11,11 +11,19 @@ const GeneratePage = () => {
     const storage = getStorage(app);
     const db = getFirestore(app);
     const [file, setFile] = useState(null);
+    const [artform, setArtform] = useState("");
     const [processedImageUrl, setProcessedImageUrl] = useState(null);
 
     // Function to handle file input change
     const handleFileChange = (event) => {
         setFile(event.target.files[0]);
+        setArtform("");
+    };
+
+    // Function to handle artform change
+    const handleArtformChange = (event) => {
+        setArtform(event.target.value);
+        setFile(null);
     };
 
     // Function to upload image
@@ -35,20 +43,40 @@ const GeneratePage = () => {
     };
 
     // Function to handle upload button click
-    const handleUpload = async () => {
+    const handleUpload = async (event) => {
+        event.preventDefault();
         if (file) {
             const downloadURL = await uploadImage(file);
             await saveImageUrlToFirestore(downloadURL);
             console.log('Image uploaded and URL saved to Firestore:', downloadURL);
+    
+            // Send the file to style_transfer endpoint
+            const formData = new FormData();
+            formData.append('design', file);
+            const response = await fetch('http://localhost:5000/style_transfer', {
+                method: 'POST',
+                body: formData
+            });
+            const imageBlob = await response.blob();
+            const imageObjectURL = URL.createObjectURL(imageBlob);
+            setProcessedImageUrl(imageObjectURL);
+        } else if (artform) {
+            // Send the artform option to generate_style endpoint
+            const response = await fetch('http://localhost:5000/generate_style', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ artform })
+            });
+            const imageBlob = await response.blob();
+            const imageObjectURL = URL.createObjectURL(imageBlob);
+            setProcessedImageUrl(imageObjectURL);
         } else {
-            alert('Please select a file first.');
+            alert('Please select a file or an artform.');
         }
     };
     
-    // Function to handle artform change
-    const handleArtformChange = (event) => {
-        // Handle artform change logic here
-    };
 
     return (
         <div style={{ textAlign: 'center', backgroundColor: 'rgb(165 151 151 / 51%)' }}>
@@ -59,6 +87,7 @@ const GeneratePage = () => {
                         className="form-select"
                         aria-label="Select artform"
                         onChange={handleArtformChange}
+                        value={artform}
                     >
                         <option value="">Select artform</option>
                         <option value="Madhubani">Madhubani</option>
