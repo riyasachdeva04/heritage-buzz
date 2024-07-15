@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.applications import vgg19
-# from IPython.display import Image
 from PIL import Image
 from rembg import remove
 import onnxruntime as ort
@@ -10,85 +9,90 @@ import cv2
 from flask import Flask, send_file, request
 import matplotlib.pyplot as plt
 from flask_cors import CORS
-from PIL import Image
 import os
 import random
 
-#open, resize and format picture into tensors
+# List of available colormaps
+colormap_list = [
+    cv2.COLORMAP_JET,
+    cv2.COLORMAP_HOT,
+    cv2.COLORMAP_COOL,
+    cv2.COLORMAP_RAINBOW,
+    cv2.COLORMAP_OCEAN,
+    cv2.COLORMAP_SUMMER
+]
+
+# Open, resize, and format picture into tensors
 def preprocess_image(image_path, img_nrows, img_ncols):
-  img = keras.preprocessing.image.load_img(image_path, target_size=(img_nrows, img_ncols))
-  img = keras.preprocessing.image.img_to_array(img)
-  img = np.expand_dims(img, axis=0)
-  img = vgg19.preprocess_input(img)
-  return tf.convert_to_tensor(img)
+    img = keras.preprocessing.image.load_img(image_path, target_size=(img_nrows, img_ncols))
+    img = keras.preprocessing.image.img_to_array(img)
+    img = np.expand_dims(img, axis=0)
+    img = vgg19.preprocess_input(img)
+    return tf.convert_to_tensor(img)
 
-  # tensor to image
+# Tensor to image
 def deprocess_image(x, img_nrows, img_ncols):
-  x = x.reshape((img_nrows, img_ncols, 3))
-  # Remove zero-center by mean pixel
-  x[:, :, 0] += 103.939
-  x[:, :, 1] += 116.779
-  x[:, :, 2] += 123.68
-  # BGR->RGB
-  x = x[:, :, ::-1]
-  x = np.clip(x, 0, 255).astype('uint8')
-  return x
+    x = x.reshape((img_nrows, img_ncols, 3))
+    x[:, :, 0] += 103.939
+    x[:, :, 1] += 116.779
+    x[:, :, 2] += 123.68
+    x = x[:, :, ::-1]
+    x = np.clip(x, 0, 255).astype('uint8')
+    return x
 
-# gram matrix of image tensor (feature-wise outer product)
+# Gram matrix of image tensor (feature-wise outer product)
 def gram_matrix(x):
-  x = tf.transpose(x, (2, 0, 1))
-  features = tf.reshape(x, (tf.shape(x)[0], -1))
-  gram = tf.matmul(features, tf.transpose(features))
-  return gram
+    x = tf.transpose(x, (2, 0, 1))
+    features = tf.reshape(x, (tf.shape(x)[0], -1))
+    gram = tf.matmul(features, tf.transpose(features))
+    return gram
 
 def style_loss(style, combination, img_nrows, img_ncols):
-  S = gram_matrix(style)
-  C = gram_matrix(combination)
-  channels = 3
-  size = img_nrows * img_ncols
-  return tf.reduce_sum(tf.square(S - C)) / (4.0 * (channels ** 2) * (size ** 2))
+    S = gram_matrix(style)
+    C = gram_matrix(combination)
+    channels = 3
+    size = img_nrows * img_ncols
+    return tf.reduce_sum(tf.square(S - C)) / (4.0 * (channels ** 2) * (size ** 2))
 
 def content_loss(base, combination):
-  return tf.reduce_sum(tf.square(combination - base))
+    return tf.reduce_sum(tf.square(combination - base))
 
 def total_variation_loss(x, img_nrows, img_ncols):
-  a = tf.square(
-      x[:, :img_nrows - 1, :img_ncols - 1, :] - x[:, 1:, :img_ncols - 1, :])
-  b = tf.square(
-      x[:, :img_nrows - 1, :img_ncols - 1, :] - x[:, :img_nrows - 1, 1:, :])
-  return tf.reduce_sum(tf.pow(a + b, 1.25))
+    a = tf.square(x[:, :img_nrows - 1, :img_ncols - 1, :] - x[:, 1:, :img_ncols - 1, :])
+    b = tf.square(x[:, :img_nrows - 1, :img_ncols - 1, :] - x[:, :img_nrows - 1, 1:, :])
+    return tf.reduce_sum(tf.pow(a + b, 1.25))
 
 def compute_loss(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols):
-  input_tensor = tf.concat([base_image, style_reference_image,combination_image], axis=0)
-  features = feature_extractor(input_tensor)
+    input_tensor = tf.concat([base_image, style_reference_image, combination_image], axis=0)
+    features = feature_extractor(input_tensor)
 
-  # Initialize the loss
-  loss = tf.zeros(shape=())
+    # Initialize the loss
+    loss = tf.zeros(shape=())
 
-  # Add content loss
-  layer_features = features[content_layer_name]
-  base_image_features = layer_features[0, :, :, :]
-  combination_features = layer_features[2, :, :, :]
-  loss = loss + content_weight * content_loss(base_image_features,
-                                              combination_features)
-  # Add style loss
-  for layer_name in style_layer_names:
-    layer_features = features[layer_name]
-    style_reference_features = layer_features[1, :, :, :]
+    # Add content loss
+    layer_features = features[content_layer_name]
+    base_image_features = layer_features[0, :, :, :]
     combination_features = layer_features[2, :, :, :]
-    sl = style_loss(style_reference_features, combination_features, img_nrows, img_ncols)
-    loss += (style_weight / len(style_layer_names)) * sl
+    loss = loss + content_weight * content_loss(base_image_features, combination_features)
+    
+    # Add style loss
+    for layer_name in style_layer_names:
+        layer_features = features[layer_name]
+        style_reference_features = layer_features[1, :, :, :]
+        combination_features = layer_features[2, :, :, :]
+        sl = style_loss(style_reference_features, combination_features, img_nrows, img_ncols)
+        loss += (style_weight / len(style_layer_names)) * sl
 
-  # Add total variation loss
-  loss += total_variation_weight * total_variation_loss(combination_image, img_nrows, img_ncols)
-  return loss
+    # Add total variation loss
+    loss += total_variation_weight * total_variation_loss(combination_image, img_nrows, img_ncols)
+    return loss
 
 @tf.function
 def compute_loss_and_grads(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols):
-  with tf.GradientTape() as tape:
-    loss = compute_loss(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols)
-  grads = tape.gradient(loss, combination_image)
-  return loss, grads
+    with tf.GradientTape() as tape:
+        loss = compute_loss(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols)
+    grads = tape.gradient(loss, combination_image)
+    return loss, grads
 
 def neural_style_transfer(base_image_path, style_reference_image_path):
     result_prefix = 'tshirt_generated'
@@ -124,12 +128,18 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
             fname = result_prefix + '_at_iteration_%d.png' % i
             keras.preprocessing.image.save_img(fname, img)
     print('b')
-    image_path = 'tshirt_generated_at_iteration_' + str(i) + '.png' 
+    image_path = 'tshirt_generated_at_iteration_' + str(i) + '.png'
     image = cv2.imread(image_path)
 
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    heatmap = cv2.applyColorMap(gray_image, cv2.COLORMAP_JET)
+    # Choose a random colormap
+    colormap = random.choice(colormap_list)
+
+    # Apply the heatmap with the chosen colormap and fixed intensity scale
+    scaled_gray_image = cv2.convertScaleAbs(gray_image)
+    heatmap = cv2.applyColorMap(scaled_gray_image, colormap)
+
     output_path = 'heatmap.png'
     print('a')
     cv2.imwrite(output_path, heatmap)
@@ -141,18 +151,10 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
     providers = ["CPUExecutionProvider"]
 
     with open(input_path, 'rb') as i:
-      with open(output_path, 'wb') as o:
-          input = i.read()
-          output = remove(input,session_options=sess_opts, providers=providers)
-          o.write(output)
-          
-    # image = Image.open(output_path)
-
-    # background = Image.new('RGBA', image.size, (255, 255, 255, 255))
-
-    # background.paste(image, (0, 0), image)
-
-    # background.save(output_path, 'PNG')
+        with open(output_path, 'wb') as o:
+            input = i.read()
+            output = remove(input, session_options=sess_opts, providers=providers)
+            o.write(output)
 
     return output_path
 
@@ -163,12 +165,12 @@ CORS(app)
 
 @app.route('/style_transfer', methods=['POST'])
 def style_transfer():
-  design = request.files['design']
-  design_path = './design.png'
-  design.save(design_path)
-  base_image_path = './input_image.png'
-  output_img = neural_style_transfer(base_image_path, design_path)
-  return send_file(output_img, mimetype='image/png')
+    design = request.files['design']
+    design_path = './design.png'
+    design.save(design_path)
+    base_image_path = './input_image.png'
+    output_img = neural_style_transfer(base_image_path, design_path)
+    return send_file(output_img, mimetype='image/png')
 
 @app.route('/generate_style', methods=['POST'])
 def generate_style():
@@ -189,7 +191,5 @@ def generate_style():
     
     return send_file(output_img, mimetype='image/png')
 
-
 if __name__ == '__main__':
     app.run()
-    
