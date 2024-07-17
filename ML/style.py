@@ -118,7 +118,7 @@ def neural_style_transfer(base_image_path, style_reference_image_path):
     combination_image = tf.Variable(preprocess_image(base_image_path, img_nrows, img_ncols))
     
     i = 0
-    for i in range(5):
+    for i in range(3):
         loss, grads = compute_loss_and_grads(combination_image, base_image, style_reference_image, feature_extractor, content_layer_name, content_weight, style_layer_names, style_weight, total_variation_weight, img_nrows, img_ncols)
         optimizer.apply_gradients([(grads, combination_image)])
         print('Iteration %d: loss=%.2f' % (i, loss))
