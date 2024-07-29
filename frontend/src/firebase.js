@@ -1,14 +1,14 @@
 import {initializeApp} from "firebase/app";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBcQpXDW4EwCTbAQOHNiwGSMdoPZylhevo",
-    authDomain: "heritage-buzz-46ca5.firebaseapp.com",
-    projectId: "heritage-buzz-46ca5",
-    storageBucket: "heritage-buzz-46ca5.appspot.com",
-    messagingSenderId: "1031760683518",
-    appId: "1:1031760683518:web:c162a37f296798b4c720af",
-    measurementId: "G-1PNWGGGL9Y",
-    databaseURL: "https://heritage-buzz-46ca5-default-rtdb.firebaseio.com/",
-  };
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+};
 
 export const app = initializeApp(firebaseConfig);

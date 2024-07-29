@@ -77,6 +77,24 @@ const GeneratePage = () => {
         }
     };
     
+    const addToCatalogue = async () => {
+        if (processedImageUrl) {
+            try {
+                await addDoc(collection(db, "catalogue"), {
+                    url: processedImageUrl,
+                    createdAt: new Date(),
+                    artform: artform || "Unknown",
+                });
+                alert('Image added to catalogue!');
+            } catch (error) {
+                console.error('Error adding image to catalogue:', error);
+                alert('Failed to add image to catalogue.');
+            }
+        } else {
+            alert('No image to add.');
+        }
+    };
+    
 
     return (
         <div style={{ textAlign: 'center', backgroundColor: 'rgb(165 151 151 / 51%)' }}>
@@ -125,6 +143,7 @@ const GeneratePage = () => {
                 <div>
                     <h2>Generated design:</h2>
                     <img src={processedImageUrl} alt="Processed Art" style={{ maxWidth: '100%', height: 'auto' }} />
+                    <button onClick={addToCatalogue} style={{ backgroundColor: '#c35264', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>Add to Catalogue</button>
                 </div>
             )}
         </div>
